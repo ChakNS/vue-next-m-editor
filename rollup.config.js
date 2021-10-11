@@ -6,7 +6,7 @@ import typescript from '@rollup/plugin-typescript'
 import { terser } from 'rollup-plugin-terser'
 import pkg from './package.json'
 // import dts from 'rollup-plugin-dts'
-import jsx from 'acorn-jsx'
+// import jsx from 'acorn-jsx'
 
 const extensions = ['.ts', '.js', '.tsx']
 
@@ -37,7 +37,7 @@ export default [
       }
     ],
     external: ['vue'],
-    acornInjectPlugins: [jsx()],
+    // acornInjectPlugins: [jsx()],
     plugins: [
       typescript({
         lib: ["es5", "es6", "dom"],

@@ -1,5 +1,3 @@
-import VueNextMEditor from './VueNextMEditor.vue'
-export default VueNextMEditor
-// import testFun from './test'
-// export default testFun
-
+import VueNextMEditor from './components/VueNextMEditor'
+export { VueNextMEditor }
+// export default {}

@@ -1,21 +1,17 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png" />
-  <div>hello world!</div>
-  <div>hot load!</div>
-  <MEditor/>
+  <VueNextMEditor/>
+  hello world
 </template>
 
 <script lang="ts">
 import { defineComponent, onMounted } from 'vue'
-import MEditor from 'vue-next-m-editor'
-// import test from 'vue-next-m-editor'
-import HelloWorld from './components/HelloWorld.vue'
+import { VueNextMEditor } from 'vue-next-m-editor'
 
 export default defineComponent({
   name: 'App',
   components: {
-    HelloWorld,
-    MEditor
+    VueNextMEditor
   },
   setup () {
     onMounted(() => {

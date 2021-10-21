@@ -1,24 +1,42 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png" />
-  <VueNextMEditor/>
-  hello world
+  <MEditor
+    v-model="value"
+    mode="edit"
+    @on-change="handleChange"
+    @on-fullscreen-change="handleFullScreenChange"
+    @on-mode-change="handleModeChange"
+  />
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted } from 'vue'
-import { VueNextMEditor } from 'vue-next-m-editor'
+import { defineComponent, ref } from 'vue'
+import { MEditor } from 'vue-next-m-editor'
+import 'vue-next-m-editor/dist/index.min.css'
 
 export default defineComponent({
   name: 'App',
   components: {
-    VueNextMEditor
+    MEditor
   },
   setup () {
-    onMounted(() => {
-      console.log('a')
-      // const a = test()
-      // console.log(a)
-    })
+    const value = ref('# hello world')
+    const handleChange = ({ content, htmlContent }: { content: string, htmlContent: string }) => {
+      console.log('content', content)
+      console.log('htmlContent', htmlContent)
+    }
+    const handleFullScreenChange = (fullScreen: boolean) => {
+      console.log('fullscreenChange', fullScreen)
+    }
+    const handleModeChange = (newMode: string, oldMode: string) => {
+      console.log('newMode', newMode, 'oldMode', oldMode)
+    }
+    return {
+      value,
+      handleChange,
+      handleFullScreenChange,
+      handleModeChange
+    }
   }
 })
 </script>

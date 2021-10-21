@@ -1,0 +1,24 @@
+@import './color.scss';
+
+.editor-content-edit-line-num {
+  min-width: 30px;
+  padding: 10px 0 100px!important;
+  min-height: 100%;
+  text-align: center;
+  list-style: none;
+  background: $light-column-bg;
+  color: $light-column-color;
+  font-size: 12px;
+  li {
+      list-style: none;
+      line-height: 30px;
+  }
+  .scale-li {
+    transform: scale(.8);
+    transform-origin: center;
+  }
+}
+.dark-editor .editor-content-edit-line-num {
+  background: $dark-column-bg;
+  color: $dark-column-color;
+}

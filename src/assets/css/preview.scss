@@ -1,0 +1,68 @@
+.m-editor-preview {
+  text-align: left;
+  line-height: 2;
+  ul, ol {
+    margin: 1.5em 0;
+    padding: 0 2em;
+  }
+  ul {
+    li {
+      list-style: disc;
+    }
+  }
+  ol {
+    li {
+      list-style: decimal;
+    }
+  }
+  a {
+    color: #2d8cf0;
+  }
+  blockquote {
+    border-left: 2px solid #009a61;
+    color: #333;
+    font-size: 1em;
+    padding: 0.5em 1em;
+    margin: 1.5em 0;
+    background: #f8f8f8;
+    border-radius: 3px;
+  }
+  code {
+    font-size: 14px;
+    border-radius: 3px;
+  }
+  pre {
+    width: 100%;
+    margin: 1em 0;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border: 1px solid #dddee1;
+    border-bottom: 0;
+    background: #fff;
+    border-spacing: 0;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    tr {
+      td, th {
+        padding: 0 0.5em;
+        line-height: 40px;
+        color: #333;
+        cursor: pointer;
+        border: 1px solid #dddee1;
+        min-width: 100px;
+      }
+      &:nth-of-type(2n) td, th {
+        background: #f8f8f9;
+      }
+    }
+  }
+  ol {
+    padding: 0 2em;
+    list-style: decimal;
+  }
+  img {
+    max-width: 100%;
+  }
+}

@@ -1,5 +1,5 @@
 
-import { defineComponent, toRefs, ref, Ref, watch, onMounted, onBeforeUnmount, computed, watchEffect } from 'vue'
+import { defineComponent, toRefs, ref, watch, onMounted, onBeforeUnmount, computed, watchEffect } from 'vue'
 import ToolBar from './ToolBar'
 import Column from './Column'
 import { config } from '../assets/js/config'
@@ -70,13 +70,19 @@ export const MEditor = defineComponent({
     },
     debounceRender: {
       type: Boolean,
-      default: true
+      default: false
     },
     debounceRenderWait: {
       type: Number,
       default: 200
     }
   },
+  emits: [
+    'on-change',
+    'on-mode-change',
+    'on-fullscreen-change',
+    'update:modelValue'
+  ],
   setup (props, { emit }) {
     const { showLineNum, placeholder, autoScroll, debounceRenderWait, debounceRender } = toRefs(props)
     const iconLength = ref(config.length)
@@ -84,19 +90,14 @@ export const MEditor = defineComponent({
     const mode = ref(props.mode)
     const theme = ref(props.theme)
     const fullScreen = ref(props.fullScreen)
-    const value = computed({
-      get: () => props.modelValue,
-      set: (_value) => {
-        emit('update:modelValue', _value)
-      }
-    })
+    const value = ref('')
     const markedHtml = ref('')
     const scrollType = ref('edit')
-    const mEditor: Ref<HTMLDivElement | null> = ref(null)
-    const mTextarea: Ref<HTMLTextAreaElement | null> = ref(null)
-    const editWrapper: Ref<HTMLDivElement | null> = ref(null)
-    const previewWrapper: Ref<HTMLDivElement | null> = ref(null)
-    const inputPre: Ref<HTMLDivElement | null> = ref(null)
+    const mEditorRef = ref<HTMLDivElement>()
+    const mTextareaRef = ref<HTMLTextAreaElement>()
+    const editWrapperRef = ref<HTMLDivElement>()
+    const previewWrapperRef = ref<HTMLDivElement>()
+    const inputPreRef = ref<HTMLDivElement>()
 
     const setHtml = (_value: string) => {
       if (debounceRender.value) {
@@ -113,33 +114,48 @@ export const MEditor = defineComponent({
       fullScreen.value = _fullScreen
       emit('on-fullscreen-change', _fullScreen)
     }
-    const debounceMarked = debounce((value) => {
+    const debounceMarked = debounce((value: string) => {
       markedHtml.value = betterMarked(value)
     }, debounceRenderWait.value)
-    const handleScroll = autoScroll.value ? throttle(() => { // scroll
-      const editWrapperMaxScrollTop = editWrapper.value!.scrollHeight - editWrapper.value!.clientHeight
-      const previewWrapperMaxScrollTop = previewWrapper.value!.scrollHeight - previewWrapper.value!.clientHeight
-      if (scrollType.value === 'edit') {
-        previewWrapper.value!.scrollTop = (editWrapper.value!.scrollTop / editWrapperMaxScrollTop) * previewWrapperMaxScrollTop
-      } else if (scrollType.value === 'preview') {
-        editWrapper.value!.scrollTop = (previewWrapper.value!.scrollTop / previewWrapperMaxScrollTop) * editWrapperMaxScrollTop
+    const handleScroll = autoScroll.value ? throttle(() => { // scrollEvent
+      if (editWrapperRef.value && previewWrapperRef.value) {
+        const editWrapperRefMaxScrollTop = editWrapperRef.value.scrollHeight - editWrapperRef.value.clientHeight
+        const previewWrapperRefMaxScrollTop = previewWrapperRef.value.scrollHeight - previewWrapperRef.value.clientHeight
+        if (scrollType.value === 'edit') {
+          previewWrapperRef.value.scrollTop = (editWrapperRef.value.scrollTop / editWrapperRefMaxScrollTop) * previewWrapperRefMaxScrollTop
+        } else if (scrollType.value === 'preview') {
+          editWrapperRef.value.scrollTop = (previewWrapperRef.value.scrollTop / previewWrapperRefMaxScrollTop) * editWrapperRefMaxScrollTop
+        }
       }
     }, 200) : undefined
+    const onInput = (e: Event) => {
+      const input = e.target as HTMLTextAreaElement
+      value.value = input.value
+      emit('update:modelValue', input.value)
+    }
 
     const handleAppendContent = (str: string) => { // append content
-      const pos = mTextarea.value!.selectionStart || 0
+      console.log('appendStr', str)
+      console.log('mTextareaRef', mTextareaRef.value)
+      if (!mTextareaRef.value) {
+        return
+      }
+      const pos = mTextareaRef.value.selectionStart || 0
       if (pos > -1) {
         value.value = `${value.value.slice(0, pos)}${str}${value.value.slice(pos)}`
-        mTextarea.value!.blur()
+        mTextareaRef.value.blur()
         setTimeout(() => {
-          mTextarea.value!.selectionStart = pos + str.length
-          mTextarea.value!.selectionEnd = pos + str.length
-          mTextarea.value!.focus()
+          if (mTextareaRef.value) {
+            mTextareaRef.value.selectionStart = pos + str.length
+            mTextareaRef.value.selectionEnd = pos + str.length
+            mTextareaRef.value.focus()
+          }
         })
       }
     }
     const handleResize = () => { // resize
-      const width = mEditor.value!.clientWidth
+      console.log('resize')
+      const width = mEditorRef?.value?.clientWidth || 0
       let _length: number = 0
       if (width > 780) {
         _length = config.length
@@ -156,7 +172,8 @@ export const MEditor = defineComponent({
     }
     const handleThrottleResize = throttle(handleResize, 300)
     const getColumnLines = () => { // get column length
-      const textareaHeight = inputPre.value!.scrollHeight
+      console.log('inputPreRef', inputPreRef.value)
+      const textareaHeight = inputPreRef.value ? inputPreRef.value.scrollHeight : 0
       const length = Math.max(value.value.split('\n').length, (textareaHeight - 20) / 30)
       columnsLength.value = length
     }
@@ -170,33 +187,48 @@ export const MEditor = defineComponent({
         }
       }
     }
+    // watch([markedHtml], ([newVal]) => {
+    //   console.log('markedHtml', newVal)
+    // })
 
-    watch([fullScreen, mode], () => {
-      setTimeout(() => {
-        getColumnLines()
-      }, 200)
-    })
-
-    watchEffect(() => {
-      setTimeout(() => {
-        getColumnLines()
-      }, 200)
-      emit('on-change', { content: value.value, htmlContent: betterMarked(value.value) })
-      setHtml(value.value)
-    })
+    // watchEffect(() => {
+    //   setTimeout(() => {
+    //     getColumnLines()
+    //   }, 200)
+    //   // console.log('trigger')
+    //   emit('on-change', { content: value.value, htmlContent: betterMarked(value.value) })
+    //   setHtml(value.value)
+    // })
 
     onMounted(() => {
+      console.log('onMounted')
       window.addEventListener('resize', handleThrottleResize)
       handleResize()
+      console.log('mTextareaRef', mTextareaRef.value)
     })
 
     onBeforeUnmount(() => {
       window.removeEventListener('resize', handleThrottleResize)
     })
 
+    watch([fullScreen, mode], () => {
+      console.log('fullScreenChange or mode change')
+      setTimeout(() => {
+        getColumnLines()
+      }, 200)
+    })
+    watch(
+      () => props.modelValue,
+      (newVal) => {
+        console.log(newVal)
+        value.value = newVal
+      },
+      { immediate: true }
+    )
+
     return () => (
       <div
-        ref={mEditor}
+        ref={mEditorRef}
         class={['editor', `${theme.value}-editor`, fullScreen.value && 'editor-fullscreen']}
       >
         <ToolBar
@@ -210,7 +242,7 @@ export const MEditor = defineComponent({
         <div class='editor-content'>
           <div
             class={['editor-content-edit', mode.value === 'edit' && 'active', mode.value === 'preview' && 'inactive']}
-            ref={editWrapper}
+            ref={editWrapperRef}
             onMouseenter={() => { scrollType.value = 'edit' }}
             onScroll={handleScroll}
           >
@@ -221,19 +253,20 @@ export const MEditor = defineComponent({
                   : ''
               }
               <div class='editor-content-edit-input'>
-                <div ref={inputPre}>{value.value.replace(/\n$/, '\n ')}</div>
+                <div ref={inputPreRef}>{value.value.replace(/\n$/, '\n ')}</div>
                 <textarea
-                  ref={mTextarea}
-                  v-model={value.value}
+                  ref={mTextareaRef}
+                  value={value.value}
                   placeholder={placeholder.value}
                   onKeydown={handleKeyPress}
+                  onInput={onInput}
                 />
               </div>
             </div>
           </div>
           <div
             class={['editor-content-preview', mode.value === 'preview' && 'active', mode.value === 'edit' && 'inactive']}
-            ref={previewWrapper}
+            ref={previewWrapperRef}
             onMouseenter={() => scrollType.value = 'preview'}
             onScroll={handleScroll}
           >

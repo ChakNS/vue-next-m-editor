@@ -4,16 +4,16 @@ import '../assets/css/tooltip.scss'
 export default defineComponent({
   name: 'ToolTip',
   setup (_, { slots }) {
-    const visible = ref(false)
-    const visible2 = ref(false)
-    const handleMouseEnter = (e: MouseEvent, type: string) => {
+    const visible = ref<boolean>(false)
+    const visible2 = ref<boolean>(false)
+    const onMouseEnter = (e: MouseEvent, type: string) => {
       e.stopPropagation()
       if (type === 'content') {
         visible2.value = true
       }
       visible.value = true
     }
-    const handleMouseLeave = (e: MouseEvent, type: string) => {
+    const onMouseLeave = (e: MouseEvent, type: string) => {
       e.stopPropagation()
       if (type === 'main') {
         setTimeout(() => {
@@ -29,8 +29,8 @@ export default defineComponent({
     return () => (
       <div class='tooltip-wrapper'>
         <div
-          onMouseenter={e => handleMouseEnter(e, 'main')}
-          onMouseleave={e => handleMouseLeave(e, 'main')}
+          onMouseenter={e => onMouseEnter(e, 'main')}
+          onMouseleave={e => onMouseLeave(e, 'main')}
         >
           {
             slots.default?.()
@@ -38,8 +38,8 @@ export default defineComponent({
         </div>
         <div
           class={['tooltip-content', visible.value ? 'mouse-in' : '']}
-          onMouseenter={e => handleMouseEnter(e, 'content')}
-          onMouseleave={e => handleMouseLeave(e, 'content')}
+          onMouseenter={e => onMouseEnter(e, 'content')}
+          onMouseleave={e => onMouseLeave(e, 'content')}
         >
           {
             slots.content?.()
